@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR=$(cd `dirname $0`; pwd)
+
+print_help () {
+  echo "Usage: $0 "
+  echo "       [--type (functions | derivations | dirs | others)]"
+  echo "       [attribute-path]"
+  echo
+  echo "Examples: "
+  echo "$0"
+  echo "$0 haskell.lib"
+  echo "$0 haskellPackages"
+  echo "$0 --type functions haskellPackages"
+  echo "$0 haskellPackages.streamly"
+  exit
+}
+
+while test -n "$1"
+do
+  case $1 in
+    -h|--help|help) print_help ;;
+    # options
+    --type) shift; TYPE="$1"; shift ;;
+    *) break ;;
+  esac
+done
+
+FUNC=listAll
+
+if test -n "$TYPE"
+then
+  case $TYPE in
+    functions) FUNC=listFns ;;
+    derivations) FUNC=listDrvs ;;
+    dirs) FUNC=listNoFnNoDrv ;;
+    others) FUNC=listOthers ;;
+    *) print_help ;;
+  esac
+fi
+
+ATTR="(import <nixpkgs> {})"
+
+echo "[$#]"
+if test $# -gt 1
+then
+  print_help
+elif test $# -eq 1
+then
+  ATTR="$ATTR"."$1"
+fi
+
+nix-instantiate -E "(import $SCRIPT_DIR/nix-ls.nix).$FUNC $ATTR" 2>&1|less
