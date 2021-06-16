@@ -1,14 +1,41 @@
+# Try to find attributes directly under a given attribute path in
+# <nixpkgs>. This can be useful if you want to know what all functions
+# are available.
+#
+# Invoke like this:
+# $ nix-instantiate -E '(import ./print-nix-functions.nix).listAll (import <nixpkgs> {})' 2>&1|less
+# $ nix-instantiate -E '(import ./print-nix-functions.nix).listAll (import <nixpkgs> {}).lib' 2>&1|less
+# $ nix-instantiate -E '(import ./print-nix-functions.nix).listAll (import <nixpkgs> {}).haskellPackages' 2>&1|less
+#
+# Functions:
+#
+# listAll: list all attributes in a set arg
+# listFns: list all functions or functor set type attributes in a set arg
+# listDrvs: list all non-functor derivation type attributes in a set arg
+# listNoFnNoDrv: list all set type attributes that are neither functors nor derivations
+# listOthers: list all set type attributes that are not derivations
+#
+# Each function has three flavors:
+#
+# listAll: list all attributes in a set
+# listAllTop: list all attrs in <nixpkgs>
+# listAllChild: list all attrs of a child of <nixpkgs>
+#
 rec {
     # XXX TODO If the child attribute is "x.y.z" then evaluate .x and then
     # .y and then .z.
 
   # This we can do much faster in the nix repl
+
+  # List all the attribute names in a set
   listAll = entity:
       let nixpkgs = import <nixpkgs> {};
           lib = nixpkgs.lib;
           tryEval = builtins.tryEval;
+          # Avoid things that are undefined or cannot be evaluated
           isEval = name: v:
               let res = tryEval (builtins.typeOf v);
+              # Note that we need "!= false", "== true" won't work.
               in if res.value != false then true else false;
           funcAttrs = lib.attrsets.filterAttrs isEval entity;
           attrs = builtins.attrNames funcAttrs;
@@ -24,6 +51,7 @@ rec {
       let nixpkgs = import <nixpkgs> {};
       in listAll (builtins.getAttr child nixpkgs);
 
+  # List attributes of an entity that are functions or functors
   listFns = entity:
       let nixpkgs = import <nixpkgs> {};
           lib = nixpkgs.lib;
@@ -43,7 +71,8 @@ rec {
       let nixpkgs = import <nixpkgs> {};
       in listFns (builtins.getAttr child nixpkgs);
 
-  listSets = entity:
+  # list attributes of an entity that are non-functor derivations
+  listDrvs = entity:
       let nixpkgs = import <nixpkgs> {};
           lib = nixpkgs.lib;
           tryEval = builtins.tryEval;
@@ -54,15 +83,16 @@ rec {
           attrs = builtins.attrNames setAttrs;
       in lib.debug.traceSeq (lib.strings.concatStringsSep "\n" attrs) "";
 
-  listSetsTop =
+  listDrvsTop =
       let nixpkgs = import <nixpkgs> {};
-      in listSets nixpkgs;
+      in listDrvs nixpkgs;
 
-  listSetsChild = child:
+  listDrvsChild = child:
       let nixpkgs = import <nixpkgs> {};
-      in listSets (builtins.getAttr child nixpkgs);
+      in listDrvs (builtins.getAttr child nixpkgs);
 
-  listNoDrvSets = entity:
+  # list attrs of an enitiy that are non-functor sets, and not derivations
+  listNoFnNoDrv = entity:
       let nixpkgs = import <nixpkgs> {};
           lib = nixpkgs.lib;
           tryEval = builtins.tryEval;
@@ -73,14 +103,15 @@ rec {
           attrs = builtins.attrNames setAttrs;
       in lib.debug.traceSeq (lib.strings.concatStringsSep "\n" attrs) "";
 
-  listNoDrvSetsTop =
+  listNoFnNoDrvTop =
       let nixpkgs = import <nixpkgs> {};
-      in listNoDrvSets nixpkgs;
+      in listNoFnNoDrv nixpkgs;
 
-  listNoDrvSetsChild = child:
+  listNoFnNoDrvChild = child:
       let nixpkgs = import <nixpkgs> {};
-      in listNoDrvSets (builtins.getAttr child nixpkgs);
+      in listNoFnNoDrv (builtins.getAttr child nixpkgs);
 
+  # list attrs of an entitiy that are non-set non-functions
   listOthers = entity:
       let nixpkgs = import <nixpkgs> {};
           lib = nixpkgs.lib;
