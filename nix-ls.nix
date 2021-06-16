@@ -3,9 +3,9 @@
 # are available.
 #
 # Invoke like this:
-# $ nix-instantiate -E '(import ./print-nix-functions.nix).listAll (import <nixpkgs> {})' 2>&1|less
-# $ nix-instantiate -E '(import ./print-nix-functions.nix).listAll (import <nixpkgs> {}).lib' 2>&1|less
-# $ nix-instantiate -E '(import ./print-nix-functions.nix).listAll (import <nixpkgs> {}).haskellPackages' 2>&1|less
+# $ nix-instantiate -E '(import ./nix-ls.nix).listAll (import <nixpkgs> {})' 2>&1|less
+# $ nix-instantiate -E '(import ./nix-ls.nix).listAll (import <nixpkgs> {}).lib' 2>&1|less
+# $ nix-instantiate -E '(import ./nix-ls.nix).listAll (import <nixpkgs> {}).haskellPackages' 2>&1|less
 #
 # Functions:
 #
@@ -13,7 +13,7 @@
 # listFns: list all functions or functor set type attributes in a set arg
 # listDrvs: list all non-functor derivation type attributes in a set arg
 # listNoFnNoDrv: list all set type attributes that are neither functors nor derivations
-# listOthers: list all set type attributes that are not derivations
+# listOthers: list attrs of an entitiy that are non-set non-functions
 #
 # Each function has three flavors:
 #
