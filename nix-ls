@@ -41,7 +41,6 @@ fi
 
 ATTR="(import <nixpkgs> {})"
 
-echo "[$#]"
 if test $# -gt 1
 then
   print_help
