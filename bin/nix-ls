@@ -49,4 +49,7 @@ then
   ATTR="$ATTR"."$1"
 fi
 
-nix-instantiate -E "(import $SCRIPT_DIR/nix-ls.nix).$FUNC $ATTR" 2>&1|less
+nix-instantiate \
+  --eval \
+  -E "(import $SCRIPT_DIR/nix-ls.nix).$FUNC $ATTR" 2>&1 \
+  | less
